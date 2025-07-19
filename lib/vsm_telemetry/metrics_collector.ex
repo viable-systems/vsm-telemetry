@@ -117,14 +117,59 @@ defmodule VsmTelemetry.MetricsCollector do
   end
 
   defp update_prometheus_metrics(metrics) do
+    # First ensure gauges are declared
+    setup_gauges()
+    
     # Update Prometheus gauges for each metric
     Enum.each(metrics, fn {system, system_metrics} ->
       Enum.each(system_metrics, fn {metric_name, value} ->
-        :prometheus_gauge.set(
-          [vsm, system, metric_name],
-          value
-        )
+        gauge_name = String.to_atom("vsm_#{system}_#{metric_name}")
+        :prometheus_gauge.set(gauge_name, value)
       end)
+    end)
+  end
+  
+  defp setup_gauges do
+    # Setup gauges if not already done
+    gauges = [
+      # System 1 gauges
+      {:vsm_system1_operational_units, "Number of operational units in System 1"},
+      {:vsm_system1_performance_score, "Performance score for System 1"},
+      {:vsm_system1_resource_utilization, "Resource utilization for System 1"},
+      {:vsm_system1_throughput, "Throughput for System 1"},
+      # System 2 gauges
+      {:vsm_system2_coordination_efficiency, "Coordination efficiency for System 2"},
+      {:vsm_system2_variety_handled, "Variety handled by System 2"},
+      {:vsm_system2_channel_capacity, "Channel capacity for System 2"},
+      {:vsm_system2_oscillation_dampening, "Oscillation dampening for System 2"},
+      # System 3 gauges
+      {:vsm_system3_control_effectiveness, "Control effectiveness for System 3"},
+      {:vsm_system3_optimization_score, "Optimization score for System 3"},
+      {:vsm_system3_audit_compliance, "Audit compliance for System 3"},
+      {:vsm_system3_synergy_level, "Synergy level for System 3"},
+      # System 4 gauges
+      {:vsm_system4_environmental_awareness, "Environmental awareness for System 4"},
+      {:vsm_system4_future_readiness, "Future readiness for System 4"},
+      {:vsm_system4_threat_detection, "Threat detection for System 4"},
+      {:vsm_system4_opportunity_identification, "Opportunity identification for System 4"},
+      # System 5 gauges
+      {:vsm_system5_policy_coherence, "Policy coherence for System 5"},
+      {:vsm_system5_identity_strength, "Identity strength for System 5"},
+      {:vsm_system5_strategic_alignment, "Strategic alignment for System 5"},
+      {:vsm_system5_ethos_consistency, "Ethos consistency for System 5"},
+      # Overall gauges
+      {:vsm_overall_viability_index, "Overall viability index"},
+      {:vsm_overall_recursion_depth, "Overall recursion depth"},
+      {:vsm_overall_autonomy_level, "Overall autonomy level"},
+      {:vsm_overall_adaptation_rate, "Overall adaptation rate"}
+    ]
+    
+    Enum.each(gauges, fn {name, help} ->
+      try do
+        :prometheus_gauge.new([name: name, help: help])
+      rescue
+        _ -> :ok # Gauge already exists
+      end
     end)
   end
 

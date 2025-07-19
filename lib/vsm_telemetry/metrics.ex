@@ -13,7 +13,7 @@ defmodule VsmTelemetry.Metrics do
   defp setup_histograms do
     # Response time histograms
     :prometheus_histogram.new([
-      name: [:vsm, :response_time],
+      name: :vsm_response_time,
       labels: [:system, :operation],
       buckets: [10, 50, 100, 250, 500, 1000, 2500, 5000, 10000],
       help: "Response time for VSM operations in milliseconds"
@@ -21,7 +21,7 @@ defmodule VsmTelemetry.Metrics do
     
     # Processing time histograms
     :prometheus_histogram.new([
-      name: [:vsm, :processing_time],
+      name: :vsm_processing_time,
       labels: [:system, :task_type],
       buckets: [5, 10, 25, 50, 100, 250, 500, 1000],
       help: "Processing time for VSM tasks in milliseconds"
@@ -31,21 +31,21 @@ defmodule VsmTelemetry.Metrics do
   defp setup_counters do
     # Operation counters
     :prometheus_counter.new([
-      name: [:vsm, :operations_total],
+      name: :vsm_operations_total,
       labels: [:system, :operation, :status],
       help: "Total number of VSM operations"
     ])
     
     # Error counters
     :prometheus_counter.new([
-      name: [:vsm, :errors_total],
+      name: :vsm_errors_total,
       labels: [:system, :error_type],
       help: "Total number of errors in VSM"
     ])
     
     # Message counters
     :prometheus_counter.new([
-      name: [:vsm, :messages_total],
+      name: :vsm_messages_total,
       labels: [:from_system, :to_system, :message_type],
       help: "Total number of messages between VSM systems"
     ])
@@ -54,14 +54,14 @@ defmodule VsmTelemetry.Metrics do
   defp setup_summaries do
     # Variety summaries
     :prometheus_summary.new([
-      name: [:vsm, :variety_absorbed],
+      name: :vsm_variety_absorbed,
       labels: [:system],
       help: "Amount of variety absorbed by each system"
     ])
     
     # Coordination summaries
     :prometheus_summary.new([
-      name: [:vsm, :coordination_lag],
+      name: :vsm_coordination_lag,
       labels: [:between_systems],
       help: "Coordination lag between VSM systems"
     ])
@@ -70,12 +70,12 @@ defmodule VsmTelemetry.Metrics do
   # Helper functions for recording metrics
   def record_operation(system, operation, status, duration) do
     :prometheus_counter.inc(
-      [:vsm, :operations_total],
+      :vsm_operations_total,
       [system, operation, status]
     )
     
     :prometheus_histogram.observe(
-      [:vsm, :response_time],
+      :vsm_response_time,
       [system, operation],
       duration
     )
@@ -83,21 +83,21 @@ defmodule VsmTelemetry.Metrics do
   
   def record_error(system, error_type) do
     :prometheus_counter.inc(
-      [:vsm, :errors_total],
+      :vsm_errors_total,
       [system, error_type]
     )
   end
   
   def record_message(from_system, to_system, message_type) do
     :prometheus_counter.inc(
-      [:vsm, :messages_total],
+      :vsm_messages_total,
       [from_system, to_system, message_type]
     )
   end
   
   def record_variety_absorbed(system, amount) do
     :prometheus_summary.observe(
-      [:vsm, :variety_absorbed],
+      :vsm_variety_absorbed,
       [system],
       amount
     )
@@ -105,7 +105,7 @@ defmodule VsmTelemetry.Metrics do
   
   def record_coordination_lag(between_systems, lag) do
     :prometheus_summary.observe(
-      [:vsm, :coordination_lag],
+      :vsm_coordination_lag,
       [between_systems],
       lag
     )

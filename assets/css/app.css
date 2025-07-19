@@ -1,0 +1,29 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+/* VSM Telemetry custom styles */
+
+.vsm-dashboard {
+  @apply p-6 max-w-7xl mx-auto;
+}
+
+.metric-card {
+  @apply bg-white rounded-lg shadow p-4 text-center;
+}
+
+.metric-card h3 {
+  @apply text-sm text-gray-600 mb-2;
+}
+
+.metric-card p {
+  @apply font-bold text-blue-600;
+}
+
+.system-card {
+  @apply bg-white rounded-lg shadow p-6;
+}
+
+.metric-item {
+  @apply flex justify-between py-1 border-b border-gray-100 last:border-0;
+}

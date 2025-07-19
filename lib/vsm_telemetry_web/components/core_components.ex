@@ -68,7 +68,8 @@ defmodule VsmTelemetryWeb.CoreComponents do
     <div
       :if={msg = Phoenix.Flash.get(@flash, @kind)}
       id={@id}
-      phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> JS.remove()}
+      phx-click="lv:clear-flash"
+      phx-value-key={@kind}
       role="alert"
       class={[
         "fixed top-2 right-2 mr-2 w-80 sm:w-96 z-50 rounded-lg p-3 ring-1",
@@ -86,5 +87,5 @@ defmodule VsmTelemetryWeb.CoreComponents do
     """
   end
 
-  alias Phoenix.LiveView.JS
+  # Removed unused alias
 end
