@@ -20,6 +20,16 @@ if System.get_env("PHX_SERVER") do
   config :vsm_telemetry, VsmTelemetryWeb.Endpoint, server: true
 end
 
+# Set default secret key base for all environments if not provided
+unless config_env() == :test do
+  secret_key_base =
+    System.get_env("SECRET_KEY_BASE") ||
+      "J4KQqPfBmeHHsZqPwPZUqS9mVZr7VNygKPGwvhcmX7H3mqGjWN7kUB3xEz5KPNeR7gwZvLdTrSfPH5nRyYS2Yw=="
+
+  config :vsm_telemetry, VsmTelemetryWeb.Endpoint,
+    secret_key_base: secret_key_base
+end
+
 if config_env() == :prod do
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you
