@@ -49,7 +49,27 @@ defmodule VsmTelemetry.MixProject do
       {:floki, ">= 0.30.0", only: :test},
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.2", runtime: Mix.env() == :dev}
-    ]
+    ] ++ vsm_deps()
+  end
+  
+  defp vsm_deps do
+    if in_umbrella?() do
+      [
+        {:vsm_core, in_umbrella: true}
+      ]
+    else
+      [
+        {:vsm_core, path: "../vsm-core"}
+      ]
+    end
+  end
+  
+  defp in_umbrella? do
+    # Check if we're being compiled as part of an umbrella project
+    case System.get_env("MIX_BUILD_PATH") do
+      nil -> false
+      path -> String.contains?(path, "_build/#{Mix.env()}/lib")
+    end
   end
 
   # Aliases are shortcuts or tasks specific to the current project.
