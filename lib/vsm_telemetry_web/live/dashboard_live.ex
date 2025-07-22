@@ -4,33 +4,75 @@ defmodule VsmTelemetryWeb.DashboardLive do
   @impl true
   def mount(_params, _session, socket) do
     if connected?(socket) do
-      # Subscribe to VSM metrics
+      # Subscribe to real-time metrics via PubSub
+      Phoenix.PubSub.subscribe(VsmTelemetry.PubSub, "vsm:metrics")
+      
+      # Subscribe to VSM metrics via telemetry
       :telemetry.attach(
-        "dashboard-vsm-metrics",
+        "dashboard-vsm-metrics-#{inspect(self())}",
         [:vsm, :metrics],
         &handle_vsm_metrics/4,
-        nil
+        %{socket_pid: self()}
       )
       
-      # Schedule periodic refresh
-      :timer.send_interval(1000, self(), :refresh)
+      # Schedule periodic refresh as fallback
+      :timer.send_interval(2000, self(), :refresh)
     end
 
-    {:ok, assign(socket, metrics: initial_metrics())}
+    # Get current metrics if available
+    current_metrics = try do
+      VsmTelemetry.MetricsCollector.get_current_metrics()
+    rescue
+      _ -> initial_metrics()
+    end
+
+    {:ok, assign(socket, 
+      metrics: current_metrics,
+      last_update: DateTime.utc_now(),
+      connected: connected?(socket),
+      update_count: 0
+    )}
   end
 
   @impl true
   def handle_info(:refresh, socket) do
-    {:noreply, socket}
+    # Fallback refresh - get latest metrics if we missed updates
+    current_metrics = try do
+      VsmTelemetry.MetricsCollector.get_current_metrics()
+    rescue
+      _ -> socket.assigns.metrics
+    end
+    
+    {:noreply, assign(socket, 
+      metrics: current_metrics, 
+      last_update: DateTime.utc_now()
+    )}
+  end
+
+  @impl true
+  def handle_info({:metrics_update, metrics}, socket) do
+    # Real-time update from PubSub
+    {:noreply, assign(socket, 
+      metrics: metrics,
+      last_update: DateTime.utc_now(),
+      update_count: socket.assigns.update_count + 1
+    )}
   end
 
   @impl true
   def handle_info({:vsm_metrics, metrics}, socket) do
-    {:noreply, assign(socket, metrics: metrics)}
+    # Telemetry-based update
+    {:noreply, assign(socket, 
+      metrics: metrics,
+      last_update: DateTime.utc_now(),
+      update_count: socket.assigns.update_count + 1
+    )}
   end
 
-  defp handle_vsm_metrics(_event_name, measurements, _metadata, _config) do
-    send(self(), {:vsm_metrics, measurements})
+  defp handle_vsm_metrics(_event_name, measurements, metadata, config) do
+    if config[:socket_pid] do
+      send(config[:socket_pid], {:vsm_metrics, measurements})
+    end
   end
 
   defp initial_metrics do

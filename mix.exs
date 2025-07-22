@@ -5,7 +5,7 @@ defmodule VsmTelemetry.MixProject do
     [
       app: :vsm_telemetry,
       version: "0.1.0",
-      elixir: "~> 1.14",
+      elixir: "~> 1.17",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -37,7 +37,7 @@ defmodule VsmTelemetry.MixProject do
       
       # Telemetry and Metrics
       {:telemetry_metrics, "~> 1.0"},
-      {:telemetry_poller, "~> 1.0"},
+      {:telemetry_poller, "~> 1.1"},
       {:prometheus_ex, "~> 3.1"},
       {:prometheus_plugs, "~> 1.1"},
       
@@ -54,9 +54,8 @@ defmodule VsmTelemetry.MixProject do
   
   defp vsm_deps do
     if in_umbrella?() do
-      [
-        {:vsm_core, in_umbrella: true}
-      ]
+      # In umbrella mode, dependencies are managed by the umbrella project
+      []
     else
       [
         {:vsm_core, path: "../vsm-core"}
@@ -65,11 +64,7 @@ defmodule VsmTelemetry.MixProject do
   end
   
   defp in_umbrella? do
-    # Check if we're being compiled as part of an umbrella project
-    case System.get_env("MIX_BUILD_PATH") do
-      nil -> false
-      path -> String.contains?(path, "_build/#{Mix.env()}/lib")
-    end
+    Mix.Project.umbrella?()
   end
 
   # Aliases are shortcuts or tasks specific to the current project.
